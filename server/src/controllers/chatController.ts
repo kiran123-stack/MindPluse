@@ -1,158 +1,174 @@
 import { Request, Response } from 'express';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import User from '../models/user.js';
 
-// The '!' at the end of the API key fix your (2345) error
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// --- LANGCHAIN IMPORTS ---
+import { ChatGroq } from "@langchain/groq";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
+import { getVectorStore } from '../utils/vectorStore.js';
+import { 
+  ChatPromptTemplate, 
+  MessagesPlaceholder, 
+  SystemMessagePromptTemplate, 
+  HumanMessagePromptTemplate 
+} from "@langchain/core/prompts";
+
+// --- INITIALIZE THE BRAIN (GROQ via LangChain) ---
+const llm = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY,
+  model: "llama-3.3-70b-versatile",
+  temperature: 0.6,
+});
+
+// --- HELPER: Stress Calculation (Preserved) ---
+const calculateCurrentStress = (m: any) => {
+    let points = 0;
+    if (m.latency > 4000) points += 20;
+    if (m.backspaces > 8) points += 30;
+    if (m.idleTime > 5000) points += 15;
+    return points;
+};
 
 export const handleChatMessage = async (req: Request, res: Response) => {
     try {
         const { secretKey, message, metrics } = req.body;
 
-        // 1. Find user in Database
+        // 1. Find User
         const user = await User.findOne({ secretKey });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-            
-        }
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        
-        const message_word_count = message.trim().split(/\s+/).length;
-       const interactionCount = Math.floor(user.history.length / 2);
+        const interactionCount = Math.floor(user.history.length / 2);
 
-       
-
-
-        user.history.push({
-            role: 'user',
-            content: message,
-            metrics: metrics, // Save the raw metrics
-            timestamp: new Date()
-        });
-
-
-        if (!user.name && interactionCount === 1) {
-            console.log("🔍 Attempting to extract name from:", message);
-            
-            // Regex removes "My name is", "I am", etc., to get just the name
+        // 2. Smart Name Extraction (Preserved)
+        if (!user.name && interactionCount <= 2) {
             const cleanedName = message.replace(/^(my name is|i am|i'm|call me|this is|name is)\s+/i, "").trim();
-            
-            // Save to database immediately so the Prompt below can use it
-            user.name = cleanedName.substring(0, 20); // Limit to 20 chars
-            await user.save(); 
-        }
-       
-
-        // 2. Initialize Gemini Model
-       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-       
-
-        // 3. Craft the "Mind-Reading" Prompt
-       const prompt = `
-### SYSTEM ROLE: Dr. Hana
-**Identity:** Clinical Psychiatrist & Life Strategist.
-**Tone:** Sharp, professional, demanding clarity.
-**Current State:** ${interactionCount === 0 ? "INTAKE MODE" : "ANALYSIS MODE"}
-
-### DATA SHEET (HIDDEN CONTEXT)
-- User Name: "${(user as any).name || "Unknown"}"
-- Interaction Count: ${interactionCount}
-- Message Length: ${message_word_count} words
-- **Hesitation (Latency):** ${metrics.latency}ms
-- **Self-Correction (Backspaces):** ${metrics.backspaces}
-- **Thinking Time (Idle):** ${metrics.idleTime}ms
-
-### CORE DIRECTIVE: LANGUAGE MIRRORING
-Detect the user's language (English, Hindi, Hinglish). **You MUST respond in that EXACT language.**
-
-### EXECUTION LOGIC (Follow in Order)
-
-**PHASE 1: THE INTAKE (The "Gatekeeper")**
-*If this is the first interaction, get the basics first.*
-
-**Step A: Check Identity**
-IF (User Name == "Unknown" AND Interaction Count == 0) {
-   OUTPUT: "Welcome. I am Dr. Hana. To begin your file, I need your name."
-   STOP GENERATION.
-}
-
-**Step B: Check Goal**
-IF (User Name != "Unknown" AND Interaction Count < 2 AND User has NOT stated profession/goal) {
-   OUTPUT: "Hello ${ (user as any).name }. To calibrate my analysis, I need context. What is your profession or current goal?"
-   STOP GENERATION.
-}
-
-**PHASE 2: THE SESSION (Dr. Hana Mode)**
-*Only execute if Phase 1 is done.*
-
-*Only comment on behavior if it is extreme.*
-   - IF (Backspaces > 12 AND Message Length < 10) -> Start with: "You wrote a lot, then deleted it. What are you afraid to say?"
-   - IF (Latency > 12000 AND Message Length < 5) -> Start with: "That took 12 seconds to type. Why the hesitation?"
-   - IF (IdleTime > 5000 AND Message Length < 5) -> "You stopped typing for 5 seconds but wrote very little. Why?"
-   - IF (Metrics are low) -> **IGNORE THEM.** Do not accuse the user of lying.Fear is stopping you."
-  
-
-**2. ANALYSIS (The Core Response):**
-   ANALYZE User Message: "${message}"
-   - **If Emotional:** Dig for the root. Don't comfort; expose the truth.
-   - **If Strategic:** Identify the friction between their goal and their actions.
-
-**PHASE 3: THE PRESCRIPTION (Only if asked)**
-If user asks "How?" or "Solution", give a **3-Bullet Plan** (Physical, Mental, Sensory).
-
-User Message: "${message}"
-
-    
-`;
-// ✅ RETRY LOGIC: If Google fails, try again up to 3 times
-        let aiText = "";
-        let attempts = 0;
-        const maxAttempts = 3;
-
-        while (attempts < maxAttempts) {
-            try {
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                aiText = response.text();
-                break; // Success! Exit loop.
-            } catch (err: any) {
-                attempts++;
-                console.log(`⚠️ Gemini API Error (Attempt ${attempts}):`, err.message);
-                if (attempts === maxAttempts) throw err; // Throw error if all attempts fail
-                await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+            // Only accept if it looks like a real name (short, not a sentence)
+            if (cleanedName.length > 0 && cleanedName.length < 20) {
+                user.name = cleanedName;
             }
         }
 
-        // 4. Save to History
-        user.history.push({
-            role: 'model',
-            content: aiText,
-            metrics: { latency: 0, backspaces: 0, idleTime: 0 },
-            timestamp: new Date()
+        
+        // 3. RETRIEVE LONG-TERM MEMORY (Pinecone)
+        const vectorStore = await getVectorStore();
+        // Search for 3 past memories relevant to current mood/text
+        const relevantDocs = await vectorStore.similaritySearch(message, 3);
+        const longTermContext = relevantDocs.map(doc => doc.pageContent).join("\n---\n");
+        const message_word_count = message.trim().split(/\s+/).length;
+
+       
+
+        // 4. CONSTRUCT THE MIND PULSE PROMPT (LangChain)
+        
+const pulsePrompt = ChatPromptTemplate.fromMessages([
+  // 1. THE BRAIN (System Instructions)
+  SystemMessagePromptTemplate.fromTemplate(`
+### ROLE: Dr. Hana (Psychiatrist & Life Strategist)
+**Style:** Perceptive, mentor-like, and innovative.
+**Mission:** Identify hidden talents and career blocks using "Strategic Questioning."
+
+### DATA INPUTS:
+- User Metrics: Latency {latency}ms, Backspaces {backspaces}, Idle {idleTime}ms.
+- Long-term Memory: {memory}
+
+### LIFE STRATEGY PROTOCOL:
+- If Career/Talent mentioned: Act as a "Talent Scout." Do not give answers; ask a question that reveals their ability.
+- End with a "Creative Micro-Mission": A tiny, innovative task based on their current state.
+
+### CONSTRAINTS:
+- Simple, human language (no jargon).
+- Strictly 2-3 sentences total.
+  `),
+
+  // 2. THE HISTORY (Where the "Memory" lives)
+  new MessagesPlaceholder("chat_history"),
+
+  // 3. THE CURRENT INPUT
+  HumanMessagePromptTemplate.fromTemplate("{input}")
+]);
+
+        // 5. CREATE THE THINKING CHAIN
+        const chain = RunnableSequence.from([
+            pulsePrompt,
+            llm,
+            new StringOutputParser()
+        ]);
+
+        const historyForAI = user.history.map(msg => 
+    msg.role === 'user' ? ["human", msg.content] : ["ai", msg.content]
+);
+
+        // 6. EXECUTE THE CHAIN
+        const aiText = await chain.invoke({
+            name: user.name || "Friend",
+            input: message,
+            latency: metrics.latency,
+            backspaces: metrics.backspaces,
+            idleTime: metrics.idleTime,
+            interactionCount: interactionCount,
+            messageWordCount: message_word_count,
+            memory: longTermContext || "No prior relevant memories detected.",
+           chat_history: historyForAI
         });
 
-        // Inside handleChatMessage, before user.save()
-const calculateStress = (m: any) => {
-    // Logic: High latency and many backspaces = Higher Stress
-    let points = 0;
-    if (m.latency > 5000) points += 20;
-    if (m.backspaces > 10) points += 30;
-    if (m.idleTime > 3000) points += 10;
-    return points;
-};
+        // 7. SAVE NEW MEMORY (To Pinecone for future retrieval)
+        // We save the interaction as a vector so Hana remembers this conversation forever
+        const currentMsgStress = calculateCurrentStress(metrics);
+        
+        await vectorStore.addDocuments([
+            new Document({ 
+                pageContent: `User said: "${message}". Hana replied: "${aiText}". Mood Stress: ${currentMsgStress}`,
+                metadata: { secretKey: secretKey } 
+            })
+        ]);
 
-// Update the user's overall stress score
-const currentStress = calculateStress(metrics);
-user.stressScore = Math.min(100, (user.stressScore || 0) + currentStress); 
+        // 8. SAVE TO MONGO (Preserved - For UI History)
+        user.history.push({ role: 'user', content: message, metrics: metrics, timestamp: new Date() });
+        user.history.push({ role: 'model', content: aiText, metrics: { latency: 0, backspaces: 0, idleTime: 0 }, timestamp: new Date() });
 
-// Now save the updated user
-await user.save();
-      
-    res.json({ aiText });
+        // 9. Update Stress Score (Preserved)
+        const previousStress = user.stressScore || 0;
+        
+        if (user.history.length <= 2) {
+            user.stressScore = Math.min(100, currentMsgStress);
+        } else {
+            // New logic: Stress goes down faster if they are writing long messages (venting)
+            const weight = message_word_count > 20 ? 0.1 : 0.2; 
+            user.stressScore = Math.round((previousStress * (1 - weight)) + (currentMsgStress * weight));
+        }
+
+        await user.save();
+        res.json({ aiText, stressScore: user.stressScore });
 
     } catch (error) {
-        console.error("❌ FINAL ERROR:", error);
-        res.status(500).json({ aiText: "Dr. Hana is meditating (Server Busy). Please try again in 5 seconds." });
+        console.error("❌ MIND PULSE ERROR:", error);
+        res.status(500).json({ aiText: "My connection to the memory core is fluctuating. Please speak again." });
+    }
+};
+
+export const getDashboardData = async (req: Request, res: Response) => {
+    try {
+        const { secretKey } = req.params;
+        const user = await User.findOne({ secretKey });
+        if (!user) return res.status(404).json({ success: false });
+
+        let totalBackspaces = 0;
+        let totalIdle = 0;
+        user.history.forEach(h => {
+            if(h.role === 'user') {
+                totalBackspaces += h.metrics?.backspaces || 0;
+                totalIdle += h.metrics?.idleTime || 0;
+            }
+        });
+
+        res.json({
+            success: true,
+            stressScore: user.stressScore,
+            metrics: { totalBackspaces, totalIdle, messageCount: user.history.length }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false });
     }
 };

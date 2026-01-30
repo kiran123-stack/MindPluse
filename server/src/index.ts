@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './db.js';
 import { generateSecretKey } from './utils/keyGenerator.js';
 import User from './models/user.js';
-import { handleChatMessage } from './controllers/chatController.js';
+import { handleChatMessage,getDashboardData } from './controllers/chatController.js';
 
 import rateLimit from 'express-rate-limit';
 
@@ -31,13 +31,16 @@ const limiter = rateLimit({
 
 // Add types (req: Request, res: Response) to fix the 'any' error
 app.post('/api/chat/message', limiter, handleChatMessage);
+app.get('/api/dashboard/:secretKey', getDashboardData);
 
 app.post('/api/auth/init', async (req: Request, res: Response) => {
     try {
+        const { name } = req.body; // <--- Capture Name from Frontend
         const secretKey = generateSecretKey();
         
         const newUser = await User.create({
             secretKey: secretKey,
+            name: name || "", // <--- Save Name to Database
             history: []
         });
 

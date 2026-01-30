@@ -14,7 +14,7 @@ const Dashboard = () => {
 
     const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/dashboard/${secretKey}`);
+        const res = await fetch(`https://mindpulse-backend-e9xg.onrender.com/api/dashboard/${secretKey}`);
         const json = await res.json();
         if (json.success) {
             setData({

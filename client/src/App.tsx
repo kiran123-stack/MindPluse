@@ -95,7 +95,7 @@ const App = () => {
     try {
       const messagePayload = currentInput; 
       
-      const response = await fetch('http://localhost:5000/api/chat/message', {
+      const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,7 +150,7 @@ const App = () => {
     try {
       // We send an EMPTY name (""). This triggers the Backend to say:
       // "Name is unknown" -> System Prompt -> Hana asks "What is your name?"
-      const response = await fetch('http://localhost:5000/api/auth/init', { 
+      const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/auth/init', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: "" }) 
@@ -175,7 +175,7 @@ const App = () => {
     }
     setLoading(true);
     try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ secretKey: resumeKey.trim() })
@@ -311,13 +311,19 @@ const App = () => {
                   {loading && <div className="text-cyan-500 text-[10px] animate-pulse uppercase tracking-widest">Hana is sensing...</div>}
                 </div>
 
-                <div className="relative">
-                  <input 
-                    autoFocus value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleTyping} placeholder="Share your thoughts..."
-                    className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl focus:outline-none focus:border-cyan-500 text-white"
-                  />
-                </div>
+               <div className="relative flex items-center gap-2">
+  <input 
+    autoFocus value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+    onKeyDown={handleTyping} placeholder="Share your thoughts..."
+    className="flex-1 bg-black/40 border border-white/10 p-5 rounded-2xl focus:outline-none focus:border-cyan-500 text-white"
+  />
+  <button 
+    onClick={sendMessage}
+    className="bg-cyan-500 text-black px-6 py-4 rounded-2xl font-bold hover:scale-105 transition-all md:hidden"
+  >
+    SEND
+  </button>
+</div>
               </div>
             </main>
            

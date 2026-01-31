@@ -15,8 +15,8 @@ connectDB();
 
 const app = express();
 const allowedOrigins = [
-  'https://mind-pluse.vercel.app/', 
-  'http://localhost:5173/'
+  'https://mind-pluse.vercel.app', 
+  'http://localhost:5173'
 ];
 app.use(cors({
   origin: allowedOrigins,
@@ -38,6 +38,9 @@ const limiter = rateLimit({
 });
 
 // Add types (req: Request, res: Response) to fix the 'any' error
+app.get('/',(req: Request, res: Response)=>{
+  res.send("Hana's backend is up and running!");})
+
 app.post('/api/chat/message', limiter, handleChatMessage);
 app.get('/api/dashboard/:secretKey', getDashboardData);
 

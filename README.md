@@ -2,7 +2,7 @@
 MindPulse is a cutting-edge, full-stack AI system designed to analyze a user's mental state and cognitive load through digital interaction patterns. Unlike traditional chatbots, MindPulse monitors "digital cues"—such as typing latency, backspace frequency, and idle time—to provide a deeper, context-aware conversational experience.
 
 🚀 Live Demo
-Frontend (Vercel): https://mind-pluse.vercel.app/
+Frontend (Vercel): https://mind-pluse.vercel.app
 
 Backend API (Render): https://mindpulse-backend-e9xg.onrender.com
 

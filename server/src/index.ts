@@ -15,8 +15,8 @@ connectDB();
 
 const app = express();
 const allowedOrigins = [
-  'https://mind-pluse.vercel.app/', 
-  'http://localhost:5173/'
+  'https://mind-pluse.vercel.app', 
+  'http://localhost:5173'
 ];
 app.use(cors({
   origin: allowedOrigins,

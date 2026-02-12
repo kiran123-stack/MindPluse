@@ -79,7 +79,7 @@ const pulsePrompt = ChatPromptTemplate.fromMessages([
 
 ### CONSTRAINTS:
 - Simple, human language (no jargon).
-- Strictly 2-3 sentences total.
+- Strictly 1-2 sentences total.
   `),
 
   // 2. THE HISTORY (Where the "Memory" lives)

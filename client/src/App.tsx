@@ -217,7 +217,7 @@ const App = () => {
         <div className="bg-[#030712] min-h-screen text-white overflow-hidden font-sans selection:bg-cyan-500/30">
           
           {/* NAV */}
-          <nav className="fixed top-0 left-0 w-full p-8 z-50 flex items-center justify-between pointer-events-none">
+          <nav className="fixed top-0 left-0 w-full p-4 md:p-8 z-50 flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
               <img src="/ICO.webp" alt='logo' className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded flex items-center justify-center font-bold text-black" />
               <span className="text-lg font-bold tracking-widest uppercase text-slate-200">Mind<span className="text-cyan-400">Pulse</span></span>
@@ -268,8 +268,8 @@ const App = () => {
             </main>
           ) : (
             // --- CHAT INTERFACE ---
-            <main className="flex flex-col items-center justify-center min-h-screen p-6 animate-in fade-in zoom-in duration-500">
-              <div className="w-full max-w-2xl bg-slate-900/40 border border-white/5 rounded-3xl p-8 backdrop-blur-xl flex flex-col h-[600px] shadow-2xl overflow-hidden">
+            <main className="flex flex-col items-center justify-center min-h-screen p-4 md:p-6 animate-in fade-in zoom-in duration-500">
+              <div className="w-full max-w-2xl bg-slate-900/40 border border-white/5 rounded-3xl p-4 md:p-8 backdrop-blur-xl flex flex-col h-[85vh] md:h-[600px] shadow-2xl overflow-hidden">
                 
                 <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                   <div className="flex flex-col">
@@ -319,9 +319,9 @@ const App = () => {
   />
   <button 
     onClick={sendMessage}
-    className="bg-cyan-500 text-black px-6 py-4 rounded-2xl font-bold hover:scale-105 transition-all md:hidden"
+    className="bg-cyan-500 text-black px-4 py-4 rounded-2xl font-bold hover:scale-105 transition-all md:hidden"
   >
-    SEND
+    ->
   </button>
 </div>
               </div>

@@ -311,7 +311,7 @@ const App = () => {
                   {loading && <div className="text-cyan-500 text-[10px] animate-pulse uppercase tracking-widest">Hana is sensing...</div>}
                 </div>
 
-               <div className="relative flex items-center gap-2">
+               <div className="relative flex flex-col md:flex-row items-stretch md:items-center gap-2">
   <input 
     autoFocus value={inputValue} onChange={(e) => setInputValue(e.target.value)}
     onKeyDown={handleTyping} placeholder="Share your thoughts..."
@@ -319,9 +319,9 @@ const App = () => {
   />
   <button 
     onClick={sendMessage}
-    className="bg-cyan-500 text-black px-4 py-4 rounded-2xl font-bold hover:scale-105 transition-all md:hidden"
+    className="bg-cyan-500 text-black px-4 py-4 rounded-2xl font-bold hover:scale-105 transition-all "
   >
-    ->
+    send
   </button>
 </div>
               </div>

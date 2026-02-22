@@ -17,21 +17,23 @@
 
 Research in **Digital Phenotyping** suggests that our digital interactions are a direct mirror of our internal cognitive state.
 
-#### ⏳ 1. Typing Latency (Processing Speed)
-* **The Metric**: Monitors the **Interkey Interval (IKI)**—the time between keystrokes.
-* **The Insight**: Extended delays often correlate with "cognitive friction" or emotional hesitation.
-* **Grounding**: *Dynamics in typewriting performance reflect mental fatigue during real-life office work* (Jong et al., 2020).
+#### ⏳ 1. Typing Latency (Interkey Interval - IKI)
+* **The Metric**: Monitors the time elapsed between individual keystrokes.
+* **The Clinical Evidence**: Research in *PLOS ONE* proves that as **mental fatigue** and stress increase, the Interkey Interval (IKI) becomes irregular and significantly longer.
+* **Implementation**: MindPulse flags latencies >15,000ms as markers of "cognitive friction".
+* **Reference Study**: *Dynamics in typewriting performance reflect mental fatigue during real-life office work* (Jong et al., 2020).
 
 #### ⌫ 2. Backspace Frequency (Self-Censorship)
-* **The Metric**: Tracks real-time deletion and editing patterns.
-* **The Insight**: High rates of rewriting indicate anxiety, second-guessing, or a "perfectionist mask" caused by high stress.
-* **Grounding**: *Digital Phenotypes of Mobile Keyboard Backspace Rates* (Liu et al., 2024).
+* **The Metric**: Tracks real-time deletion and editing patterns within the chat interface.
+* **The Clinical Evidence**: Clinical studies demonstrate that **Backspace Rates** significantly spike when users experience anxiety or symptoms of mood disorders, reflecting "Self-Monitoring" behavior.
+* **Implementation**: Metrics detecting >5 backspaces trigger "Perfectionist Mask" analysis.
+* **Reference Study**: *Digital Phenotypes of Mobile Keyboard Backspace Rates and Their Associations With Symptoms of Mood Disorder* (Liu et al., 2024).
 
-#### ⏸️ 3. Idle Time (Cognitive Disconnect)
-* **The Metric**: Identifies sudden, long pauses during thought execution.
-* **The Insight**: Mid-sentence "freezing" can be a digital signal for dissociation or acute mental overwhelm.
-* **Grounding**: *The Effects of Typing Demand on Emotional Stress* (Lim et al., 2015).
-
+#### ⏸️ 3. Idle Time (Synaptic Delay)
+* **The Metric**: Identifies sudden, long pauses during active thought execution.
+* **The Clinical Evidence**: Research suggests that anomalies in keystroke behavior, such as idle intervals, are reliable indicators of **high sympathetic nervous system arousal** (Stress/Fight-or-Flight).
+* **Implementation**: Idle times >15,000ms are categorized as "Cognitive Disconnect" or mid-thought freezing.
+* **Reference Study**: *The Effects of Typing Demand on Emotional Stress, Mouse and Keystroke Behaviours* (Lim et al., 2015).
 ---
 
 ## 🛡️ "Zero-Knowledge" Security Architecture
@@ -82,3 +84,25 @@ MindPulse/
 │   │   ├── controllers/   # Chat & Dashboard Logic
 │   │   ├── models/        # MongoDB Schemas
 │   │   └── index.ts       # Server Entry Point
+
+---
+
+## 👤 Author
+
+<div align="center">
+  
+**Kiran** *BCA Student @ IGNOU*
+
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/kiran123-stack)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME)
+
+</div>
+
+* **Status**: Software Engineering Portfolio Project (Currently in Development)
+* **Focus**: AI Safety, Digital Phenotyping, and Zero-Knowledge Secure Architectures.
+* **Mission**: Bridging the gap between real-time behavioral biometrics and compassionate AI-driven mental health support.
+
+---
+
+### 📄 License
+This project is for portfolio purposes. Please contact the author for permissions regarding commercial use.

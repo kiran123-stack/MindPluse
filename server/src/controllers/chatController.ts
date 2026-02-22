@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import User from '../models/user.js';
+import { encryptMessage, decryptMessage } from '../utils/crypto.js';
 
 // --- LANGCHAIN IMPORTS ---
 import { ChatGroq } from "@langchain/groq";
-import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Document } from "@langchain/core/documents";
@@ -49,10 +49,10 @@ export const handleChatMessage = async (req: Request, res: Response) => {
             const cleanedName = message.replace(/^(my name is|i am|i'm|call me|this is|name is)\s+/i, "").trim();
             // Only accept if it looks like a real name (short, not a sentence)
             const invalidNames = ["hi", "hello", "hey", "sup", "yo", "good morning", "good evening", "fine", "good"];
-            
+
             if (
-                cleanedName.length > 0 && 
-                cleanedName.length < 20 && 
+                cleanedName.length > 0 &&
+                cleanedName.length < 20 &&
                 !invalidNames.includes(cleanedName.toLowerCase())
             ) {
                 user.name = cleanedName;
@@ -63,14 +63,17 @@ export const handleChatMessage = async (req: Request, res: Response) => {
         //  RETRIEVE LONG-TERM MEMORY
         const vectorStore = await getVectorStore();
         const relevantDocs = await vectorStore.similaritySearch(message, 3);
-        //  Ensure this is a string, but DO NOT inject it yet.
+
         const longTermContext = relevantDocs.length > 0
-            ? relevantDocs.map(doc => doc.pageContent).join("\n---\n")
+            ? relevantDocs.map(doc => {
+                // Decrypt the memory so Dr. Hana can actually understand it
+                return decryptMessage(doc.pageContent, secretKey);
+            }).join("\n---\n")
             : "No prior relevant memories.";
         const message_word_count = message.trim().split(/\s+/).length;
 
-        
-     
+
+
         // We trigger the wrap-up on the 14th interaction of any cycle
         let sessionWrapUpInstruction = "";
         if (interactionCount > 0 && interactionCount % 15 === 14) {
@@ -150,9 +153,10 @@ The digital vitals below tell you when the user is hiding their true emotions. *
             new StringOutputParser()
         ]);
 
-        const historyForAI = user.history.map(msg =>
-            msg.role === 'user' ? ["human", msg.content] : ["ai", msg.content]
-        );
+        const historyForAI = user.history.map(msg => {
+            const decryptedContent = decryptMessage(msg.content, secretKey);
+            return msg.role === 'user' ? ["human", decryptedContent] : ["ai", decryptedContent];
+        });
 
         //  EXECUTE THE CHAIN
         const aiText = await chain.invoke({
@@ -172,16 +176,37 @@ The digital vitals below tell you when the user is hiding their true emotions. *
         // We save the interaction as a vector so Hana remembers this conversation forever
         const currentMsgStress = calculateCurrentStress(metrics);
 
+        //ENCRYPT both messages before saving to the database
+        const encryptedUserMsg = encryptMessage(message, secretKey);
+        const encryptedAiResponse = encryptMessage(aiText, secretKey);
+
+        // Encrypt the string so Pinecone only stores gibberish
+        const memoryToStore = encryptMessage(
+            `User said: "${message}". Hana replied: "${aiText}". Mood Stress: ${currentMsgStress}`,
+            secretKey
+        );
+
         await vectorStore.addDocuments([
             new Document({
-                pageContent: `User said: "${message}". Hana replied: "${aiText}". Mood Stress: ${currentMsgStress}`,
+                pageContent: memoryToStore, // <--- Encrypted
                 metadata: { secretKey: secretKey }
             })
         ]);
 
         //  SAVE TO MONGO (Preserved - For UI History)
-        user.history.push({ role: 'user', content: message, metrics: metrics, timestamp: new Date() });
-        user.history.push({ role: 'model', content: aiText, metrics: { latency: 0, backspaces: 0, idleTime: 0 }, timestamp: new Date() });
+        user.history.push({
+            role: 'user',
+            content: encryptedUserMsg,
+            metrics: metrics,
+            timestamp: new Date()
+        });
+
+        user.history.push({
+            role: 'model',
+            content: encryptedAiResponse,
+            metrics: { latency: 0, backspaces: 0, idleTime: 0 },
+            timestamp: new Date()
+        });
 
         //  Update Stress Score (Preserved)
         const previousStress = user.stressScore || 0;

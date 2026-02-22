@@ -4,6 +4,7 @@ import Lenis from '@studio-freight/lenis';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import CalmWelcome from './CalmWelcome';
+import { decryptMessage } from './utils/crypto';
 
 const App = () => {
   const circleRef = useRef<HTMLDivElement>(null);
@@ -159,10 +160,12 @@ const App = () => {
             setSecretKey(resumeKey.trim());
             localStorage.setItem('hana_secret_key', resumeKey.trim());
             const formattedHistory = data.history.map((msg: any) => ({
-                role: msg.role === 'model' ? 'hana' : 'user',
-                text: msg.content
-            }));
+    role: msg.role === 'model' ? 'hana' : 'user',
+    // Decrypt each message using the local secretKey
+    text: decryptMessage(msg.content, resumeKey.trim()) 
+}));
             setChatHistory(formattedHistory);
+            
             
        // setIsSpeaking for welcome message to interact user till backend connect
             setIsSpeaking(true); 

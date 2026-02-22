@@ -164,7 +164,7 @@ const App = () => {
             }));
             setChatHistory(formattedHistory);
             
-            // CORRECTED: Set speaking to true so the welcome plays after login
+       // setIsSpeaking for welcome message to interact user till backend connect
             setIsSpeaking(true); 
         } else {
             alert(data.message || "Invalid Key");

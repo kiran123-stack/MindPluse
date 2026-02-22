@@ -89,21 +89,14 @@ MindPulse/
 
 ---
 
-## 👤 Author
+Author
+Kiran
+BCA Student @ IGNOU
 
-<div align="center">
+GitHub: https://github.com/kiran123-stack
 
-**Kiran** *BCA Student @ IGNOU*
+Status: Software Engineering Portfolio Project (Currently in Development)
 
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/kiran123-stack)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/YOUR_LINKEDIN_USERNAME)
+Focus: AI Safety, Digital Phenotyping, and Zero-Knowledge Secure Architectures
 
-</div>
-
-* **Status**: Software Engineering Portfolio Project (Currently in Development)
-* **Focus**: AI Safety, Digital Phenotyping, and Zero-Knowledge Secure Architectures.
-* **Mission**: Bridging the gap between real-time behavioral biometrics and compassionate AI-driven mental health support.
-
----
-## 📄 License
-This project is for portfolio purposes. Please contact the author for permissions regarding commercial use.
+Mission: Bridging the gap between real-time behavioral biometrics and compassionate AI-driven mental health support

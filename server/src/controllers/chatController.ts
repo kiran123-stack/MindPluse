@@ -44,6 +44,23 @@ export const handleChatMessage = async (req: Request, res: Response) => {
 
         const interactionCount = Math.floor(user.history.length / 2);
 
+        // 1. Calculate Session Duration
+const firstMessage = user.history[0];
+const sessionStart = firstMessage ? new Date(firstMessage.timestamp).getTime() : Date.now();
+const currentTime = Date.now();
+const sessionDurationMinutes = (currentTime - sessionStart) / (1000 * 60);
+
+// 2. The Dynamic Hard Stop (15 Minutes)
+if (sessionDurationMinutes >= 15) {
+    // We use user.name here so it works for everyone, not just Kiran
+    const displayName = user.name && user.name !== "UNKNOWN" ? user.name : "my friend";
+    
+    return res.json({ 
+        aiText: `${displayName}, we have explored a lot in these 15 minutes. To honor your progress, your mind needs rest. I won't be replying further today. Please try this: Close your eyes and breathe for 2 minutes. Come back tomorrow, and we will continue. Take care.`,
+        isLocked: true 
+    });
+}
+
         //  Smart Name Extraction (Preserved)
         if (!user.name && interactionCount <= 2) {
             const cleanedName = message.replace(/^(my name is|i am|i'm|call me|this is|name is)\s+/i, "").trim();

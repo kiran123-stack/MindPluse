@@ -78,16 +78,28 @@ app.post('/api/auth/init', async (req: Request, res: Response) => {
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
         const { secretKey } = req.body;
+        
 
         if (!secretKey) {
             return res.status(400).json({ success: false, message: "Secret key is required" });
         }
+
 
         // Find the user by their unique key
         const user = await User.findOne({ secretKey });
 
         if (!user) {
             return res.status(404).json({ success: false, message: "Invalid Secret Key. We couldn't find your friend." });
+        }
+        const lastMessage = user.history[user.history.length - 1];
+        if (lastMessage) {
+            const hoursSinceLast = (Date.now() - new Date(lastMessage.timestamp).getTime()) / (1000 * 60 * 60);
+            if (hoursSinceLast < 24) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Hana is resting. Please come back after 24 hours." 
+                });
+            }
         }
 
         // Return the existing history so the Frontend can display it
@@ -100,6 +112,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         res.status(500).json({ success: false, message: "Login failed" });
     }
 });
+
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: any) => {

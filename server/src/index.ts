@@ -41,8 +41,8 @@ app.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 15, 
-  message: { 
-    reply: "Hana needs a moment to breathe. Please wait a minute before messaging again." 
+ message: { 
+    aiText: "We have explored a lot of heavy thoughts today, and it is a good time to pause and let things settle. Our session has reached its limit for now. Take care of yourself until we speak again." 
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -62,7 +62,7 @@ app.post('/api/auth/init', async (req: Request, res: Response) => {
         
         const newUser = await User.create({
             secretKey: secretKey,
-            name: name || "", // <--- Save Name to Database
+           name: "UNKNOWN", // <--- Save Name to Database
             history: []
         });
 

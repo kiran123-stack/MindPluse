@@ -50,7 +50,32 @@ const Dashboard = () => {
 
       <main className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
         
-        {/* Pulse Intensity Card (Renamed from Stress) */}
+       
+        <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row items-center gap-6 md:gap-10 bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+            <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-48 h-48 bg-cyan-400/10 blur-[60px] rounded-full pointer-events-none" />
+            
+            <div className="relative z-10 shrink-0">
+                <img 
+                    src="/second.png" 
+                    alt="Dr. Hana Presenting" 
+                    className="w-42 h-42 md:w-48 md:h-48 object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
+                />
+            </div>
+            
+            <div className="relative z-10 text-center md:text-left flex-1">
+                <h2 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 mb-3 tracking-tight">
+                   Your Cognitive Resonance Report
+                </h2>
+                <div className="bg-black/20 border border-white/10 p-4 rounded-2xl">
+                    <p className="text-emerald-50/90 text-sm italic leading-relaxed">
+                       "I have gently compiled your digital vitals from our time together. Take a look. These numbers are not judgments they are simply a mirror reflecting how hard your mind has been working to protect you today."
+                    </p>
+                </div>
+            </div>
+        </div>
+        {/* ------------------------------------------- */}
+
+        {/* Pulse Intensity Card  */}
         <div className="bg-slate-900/40 border border-white/5 p-10 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl flex flex-col items-center">
           <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.3em] mb-8">Stress</h3>
           

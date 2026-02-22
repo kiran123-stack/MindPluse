@@ -87,16 +87,11 @@ MindPulse/
 
 ---
 
-
-
 ---
-
 
 ## 👤 Author
 
-
 <div align="center">
-
 
 **Kiran** *BCA Student @ IGNOU*
 

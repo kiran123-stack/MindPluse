@@ -58,7 +58,7 @@ const Dashboard = () => {
                 <img 
                     src="/second.png" 
                     alt="Dr. Hana Presenting" 
-                    className="w-42 h-42 md:w-48 md:h-48 object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
+                    className="w-44 h-44 md:w-48 md:h-48 object-contain drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
                 />
             </div>
             

@@ -87,10 +87,12 @@ MindPulse/
 
 ---
 
+---
+
 ## 👤 Author
 
 <div align="center">
-  
+
 **Kiran** *BCA Student @ IGNOU*
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/kiran123-stack)
@@ -103,6 +105,5 @@ MindPulse/
 * **Mission**: Bridging the gap between real-time behavioral biometrics and compassionate AI-driven mental health support.
 
 ---
-
-### 📄 License
+## 📄 License
 This project is for portfolio purposes. Please contact the author for permissions regarding commercial use.

@@ -57,12 +57,17 @@ app.get('/api/dashboard/:secretKey', getDashboardData);
 
 app.post('/api/auth/init', async (req: Request, res: Response) => {
     try {
-        const { name } = req.body; // <--- Capture Name from Frontend
+        // ✅ Destructure the exact payload structure sent by the frontend
+        const { reason, userInfo, assessmentScore } = req.body; 
         const secretKey = generateSecretKey();
         
         const newUser = await User.create({
             secretKey: secretKey,
-           name: "UNKNOWN", // <--- Save Name to Database
+            name: userInfo?.name || "UNKNOWN",
+            age: userInfo?.age || "",
+            reason: reason || "general",
+            initialAssessmentScore: assessmentScore || 0,
+            stressScore: assessmentScore || 0, // ✅ Seed initial stress with assessment score
             history: []
         });
 

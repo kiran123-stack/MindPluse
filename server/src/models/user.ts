@@ -18,7 +18,10 @@ export interface IMessage {
 
 export interface IUser extends Document {
     secretKey: string;
-    name?: string;       
+    name?: string;  
+    age?: string;
+    reason?: string;
+    initialAssessmentScore?: number;     
     profession?: string;
     stressScore: number;
     history: IMessage[];
@@ -29,7 +32,10 @@ const UserSchema: Schema = new Schema({
     // We make secretKey unique so no two users have the same ID
     secretKey: { type: String, required: true, unique: true },
 
-    name: { type: String, default: "" },       
+    name: { type: String, default: "" },  
+    age: { type: String, default: "" },
+    reason: { type: String, default: "" },
+    initialAssessmentScore: { type: Number, default: 0 },     
     profession: { type: String, default: "" },
     
     // stressScore will be updated by Gemini based on the metrics

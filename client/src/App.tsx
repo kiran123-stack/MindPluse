@@ -4,13 +4,29 @@ import Lenis from '@studio-freight/lenis';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import CalmWelcome from './CalmWelcome';
+import ReasonSelection from './ReasonSelection';
+import Assessment from './Assessment';
 import { decryptMessage } from './utils/crypto';
 
+interface SessionState {
+  reason: string;
+  userInfo: { name: string; age: string };
+  assessmentScore: number;
+}
+
 const App = () => {
+  // =========================
+  // 🔹 REFS (for animations & DOM control)
+  // =========================
   const circleRef = useRef<HTMLDivElement>(null);
   const coreRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+
+  // =========================
+  // 🔹 GLOBAL SESSION STATE
+  // =========================
 
   const [secretKey, setSecretKey] = useState<string | null>(() => localStorage.getItem('hana_secret_key'));
   const [chatHistory, setChatHistory] = useState<{ role: string; text: string }[]>([]);
@@ -23,17 +39,67 @@ const App = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLocked, setIsLocked] = useState(false);
 
-  const navigate = useNavigate();
+  // =========================
+  // 🔹 SESSION DATA (used before AI starts)
+  // =========================
 
+  const navigate = useNavigate();
+  const [sessionData, setSessionData] = useState<SessionState>(() => {
+    const saved = localStorage.getItem('hana_session_data');
+    return saved ? JSON.parse(saved) : {
+      reason: '',
+      userInfo: { name: '', age: '' },
+      assessmentScore: 0
+    };
+  });
+  useEffect(() => {
+    localStorage.setItem('hana_session_data', JSON.stringify(sessionData));
+  }, [sessionData]);
+
+  // =========================
+  // 🔹 HANDLERS
+  // =========================
+
+  // Save selected reason and move to assessment
+  const handleReasonSelected = (reasonId: string) => {
+    setSessionData(prev => ({ ...prev, reason: reasonId }));
+    navigate('/assessment');
+  };
+  // After assessment complete → initialize AI
+  const handleAssessmentComplete = (score: number, info: { name: string, age: string }) => {
+    const finalData = { ...sessionData, assessmentScore: score, userInfo: info };
+    setSessionData(finalData);
+
+    initializeHana(finalData);
+  };
+
+
+  // =========================
+  // 🔹 USER BEHAVIOR METRICS (for AI analysis)
+  // =========================
   const metrics = useRef({
-    latency: 0, backspaces: 0, startTime: 0, lastKeyTime: 0, idleTime: 0, sessionStartTime: 0
+    latency: 0,
+    backspaces: 0,
+    startTime: 0,
+    lastKeyTime: 0,
+    idleTime: 0,
+    sessionStartTime: Date.now() // FIX: ensure proper latency calculation
   });
 
+
+  // =========================
+  // 🔹 EFFECTS
+  // =========================
+
+  // Auto start session if key exists
   useEffect(() => {
     if (secretKey) {
       setIsStarted(true);
     }
   }, [secretKey]);
+
+
+  // Auto scroll chat to bottom
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,6 +107,7 @@ const App = () => {
     }
   }, [chatHistory, loading]);
 
+  // GSAP animations (only for landing screen)
   useEffect(() => {
     if (!isStarted && !isSpeaking) {
       const ctx = gsap.context(() => {
@@ -64,6 +131,7 @@ const App = () => {
     }
   }, [isStarted, isSpeaking]);
 
+  // Smooth scroll using Lenis
   useEffect(() => {
     const lenis = new Lenis();
     let animationFrameId: number;
@@ -78,21 +146,36 @@ const App = () => {
     };
   }, []);
 
+  // =========================
+  // 🔹 CORE CHAT FUNCTION
+  // =========================
+
   const sendMessage = async () => {
     if (!inputValue.trim() || !secretKey) return;
     const currentInput = inputValue;
     const currentMetrics = { ...metrics.current };
+
+    // Add user message
     setChatHistory(prev => [...prev, { role: 'user', text: currentInput }]);
     setInputValue("");
     setLoading(true);
 
-    metrics.current = { latency: 0, backspaces: 0, startTime: 0, lastKeyTime: 0, idleTime: 0, sessionStartTime: 0 };
+    metrics.current = {
+      latency: 0,
+      backspaces: 0,
+      startTime: 0,
+      lastKeyTime: 0,
+      idleTime: 0,
+      sessionStartTime: Date.now()
+    };
 
     try {
       const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretKey, message: currentInput, metrics: currentMetrics })
+        body: JSON.stringify({
+          secretKey, message: currentInput, metrics: currentMetrics
+        })
       });
       const data = await response.json();
       if (data.isLocked) setIsLocked(true);
@@ -105,44 +188,40 @@ const App = () => {
     }
   };
 
+  // Track typing behavior
   const handleTyping = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const now = Date.now();
-    if (metrics.current.startTime === 0) metrics.current.startTime = now;
-    if (e.key === 'Backspace') metrics.current.backspaces++;
-    if (metrics.current.latency === 0) {
-      metrics.current.latency = now - (metrics.current.sessionStartTime || now);
+
+    if (metrics.current.startTime === 0) {
+      metrics.current.startTime = now;
     }
+
+    if (e.key === 'Backspace') {
+      metrics.current.backspaces++;
+    }
+
+    if (metrics.current.latency === 0) {
+      metrics.current.latency = now - metrics.current.sessionStartTime;
+    }
+
     if (metrics.current.lastKeyTime > 0) {
       const gap = now - metrics.current.lastKeyTime;
-      if (gap > 2000) metrics.current.idleTime += gap;
-    }
-    metrics.current.lastKeyTime = now;
-    if (e.key === 'Enter') sendMessage();
-  };
 
-  const startSession = async () => {
-    setLoading(true);
-    try {
-
-      const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/auth/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: "" })
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        setSecretKey(data.secretKey);
-        localStorage.setItem('hana_secret_key', data.secretKey);
-        setChatHistory([{ role: 'hana', text: "Hello, I am Dr. Hana. Before we begin, could you please tell me your name?" }]);
-        setIsSpeaking(true); // Triggers Welcome Speech
+      if (gap > 2000) {
+        metrics.current.idleTime += gap;
       }
-    } catch (error) {
-      alert("Backend not responding.");
-    } finally {
-      setLoading(false);
+    }
+
+    metrics.current.lastKeyTime = now;
+
+    if (e.key === 'Enter') {
+      sendMessage();
     }
   };
+
+  // =========================
+  // 🔹 SESSION CONTROL
+  // =========================
 
   const handleResume = async () => {
     if (resumeKey.trim().length < 5) {
@@ -182,11 +261,11 @@ const App = () => {
     }
   };
 
+  // Finish welcome speech → start UI
   const finalizeStart = () => {
-    setIsSpeaking(false);
-    setIsStarted(true);
-  };
-
+  setIsSpeaking(false);
+  navigate('/reasons'); // Move to reasons AFTER the welcome animation
+};
   const handleLogout = () => {
     setSecretKey(null);
     setIsStarted(false);
@@ -194,9 +273,54 @@ const App = () => {
     setChatHistory([]);
     localStorage.removeItem('hana_secret_key');
   };
+  // Initialize AI with context data
+  const initializeHana = async (data: any) => {
+    try {
+      setSessionData(data);
 
+      // ✅ FIX: You must assign the fetch call to a variable named 'response'
+      const response = await fetch('https://mindpulse-backend-e9xg.onrender.com/api/auth/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      // Now this line will work because 'response' exists!
+      const responseData = await response.json();
+
+      if (responseData.success && responseData.secretKey) {
+        setSecretKey(responseData.secretKey);
+        localStorage.setItem('hana_secret_key', responseData.secretKey);
+
+        const userName = data.userInfo?.name || "my friend";
+
+        setChatHistory([{ 
+          role: 'hana', 
+          text: `Hello ${userName}. I am Dr. Hana. I have reviewed your vitals, and I am here for you. How are you feeling right now?` 
+        }]);
+
+        // Start the chat directly (Welcome already happened!)
+        setIsStarted(true);
+        navigate('/');
+      } else {
+        alert("Failed to initialize session on the server.");
+      }
+    } catch (e) {
+      console.error("Scaling error: Backend busy");
+    }
+  };
+  // =========================
+  // 🔹 ROUTES
+  // =========================
   return (
     <Routes>
+      <Route path="/reasons" element={<ReasonSelection onSelect={handleReasonSelected} />} />
+      <Route path="/assessment" element={
+        <Assessment
+          selectedReason={sessionData.reason as any}
+          onComplete={handleAssessmentComplete}
+        />
+      } />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/" element={
         <div className="bg-[#030712] min-h-screen text-white overflow-hidden font-sans selection:bg-cyan-500/30">
@@ -237,7 +361,7 @@ const App = () => {
                     <div className="h-px flex-1 bg-white/10"></div>
                   </div>
 
-                  <button onClick={startSession} disabled={loading} className="w-full px-8 py-4 bg-cyan-900/20 border border-cyan-500/20 text-cyan-400 font-bold rounded-xl hover:bg-cyan-500 hover:text-black hover:scale-105 transition-all">
+                  <button onClick={() => setIsSpeaking(true)} disabled={loading} className="w-full px-8 py-4 bg-cyan-900/20 border border-cyan-500/20 text-cyan-400 font-bold rounded-xl hover:bg-cyan-500 hover:text-black hover:scale-105 transition-all">
                     {loading ? "Starting..." : "Start New Session"}
                   </button>
                 </div>

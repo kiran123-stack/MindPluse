@@ -1,44 +1,78 @@
-🧠 MindPulse: AI-Powered Behavioral Analytics
-MindPulse is a cutting-edge, full-stack AI system designed to analyze a user's mental state and cognitive load through digital interaction patterns. Unlike traditional chatbots, MindPulse monitors "digital cues"—such as typing latency, backspace frequency, and idle time—to provide a deeper, context-aware conversational experience.
+# 🧠 MindPulse: The Future of Digital Phenotyping
 
-🚀 Live Demo
-Frontend (Vercel): https://mind-pluse.vercel.app/
+> **MindPulse** is an enterprise-grade, full-stack AI system designed to quantify mental state and cognitive load through **non-invasive digital interaction biometrics**. By analyzing "micro-behaviors"—typing latency, self-correction frequency, and cognitive pauses—MindPulse bridges the gap between traditional chatbots and clinical monitoring.
 
-Backend API (Render): https://mindpulse-backend-e9xg.onrender.com
+---
 
-✨ Key Features
-Behavioral Analysis (The "Mind Reading" Engine): Tracks real-time interaction metrics (latency, backspaces, idle intervals) to infer user sentiment and cognitive state.
+## 🚀 Experience the Platform
 
-Hana AI Personality: A custom-engineered AI persona that uses Long-Term Memory (RAG) to remember previous sessions and build a genuine rapport.
+| Component | Status | URL |
+| :--- | :--- | :--- |
+| **Frontend** | ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white) | [https://mind-pluse.vercel.app/](https://mind-pluse.vercel.app/) |
+| **Backend API** | ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white) | [https://mindpulse-backend-e9xg.onrender.com]( https://mindpulse-backend-e9xg.onrender.com) |
 
-Strategic Questioning: Instead of just answering, the AI uses "The 5 Whys" and "Socratic Questioning" to help users explore their own thoughts.
+---
 
-Secure Monitoring Dashboard: A dedicated space for users to view their cognitive metrics over time, secured via encrypted keys.
+## 🔬 The Science of Digital Cues
 
-RAG Integration: Uses Pinecone and HuggingFace for efficient vector storage and semantic memory retrieval.
+Research in **Digital Phenotyping** suggests that our digital interactions are a direct mirror of our internal cognitive state.
 
-🛠️ Tech Stack
-Frontend
-React (Vite) + TypeScript for a robust, type-safe UI.
+#### ⏳ 1. Typing Latency (Interkey Interval - IKI)
+* **The Metric**: Monitors the time elapsed between individual keystrokes.
+* **The Clinical Evidence**: Research in *PLOS ONE* proves that as **mental fatigue** and stress increase, the Interkey Interval (IKI) becomes irregular and significantly longer.
+* **Implementation**: MindPulse flags latencies >15,000ms as markers of "cognitive friction".
+* **Reference Study**: *Dynamics in typewriting performance reflect mental fatigue during real-life office work* (Jong et al., 2020).
 
-Tailwind CSS + Framer Motion for high-performance, futuristic animations.
+#### ⌫ 2. Backspace Frequency (Self-Censorship)
+* **The Metric**: Tracks real-time deletion and editing patterns within the chat interface.
+* **The Clinical Evidence**: Clinical studies demonstrate that **Backspace Rates** significantly spike when users experience anxiety or symptoms of mood disorders, reflecting "Self-Monitoring" behavior.
+* **Implementation**: Metrics detecting >5 backspaces trigger "Perfectionist Mask" analysis.
+* **Reference Study**: *Digital Phenotypes of Mobile Keyboard Backspace Rates and Their Associations With Symptoms of Mood Disorder* (Liu et al., 2024).
 
-Lenis for smooth, cinematic scrolling.
+#### ⏸️ 3. Idle Time (Synaptic Delay)
+* **The Metric**: Identifies sudden, long pauses during active thought execution.
+* **The Clinical Evidence**: Research suggests that anomalies in keystroke behavior, such as idle intervals, are reliable indicators of **high sympathetic nervous system arousal** (Stress/Fight-or-Flight).
+* **Implementation**: Idle times >15,000ms are categorized as "Cognitive Disconnect" or mid-thought freezing.
+* **Reference Study**: *The Effects of Typing Demand on Emotional Stress, Mouse and Keystroke Behaviours* (Lim et al., 2015).
+---
 
-Backend
-Node.js & Express with TypeScript.
+## 🛡️ "Zero-Knowledge" Security Architecture
 
-LangChain for orchestrating AI workflows and memory.
+We prioritize user privacy by ensuring that even the developers cannot read your private reflections.
 
-Groq LPU Inference for ultra-fast AI responses.
+* **Transient Decryption**: User data is stored as **AES-256 encrypted hashes** in MongoDB. The server only decrypts data in temporary RAM for milliseconds while the AI processes a response.
+* **Vector Isolation**: Long-term memories in Pinecone are encrypted before storage, ensuring total privacy in the cloud.
+* **Anonymous Authentication**: Users are identified solely by a secure `secretKey`. No PII (Personally Identifiable Information) is ever collected.
 
-MongoDB Atlas for persistent user and session storage.
+---
 
-Pinecone for vector-based long-term memory retrieval.
+## ✨ Key Features
 
-📁 Project Structure
-Plaintext
+* **Behavioral Analysis**: Real-time inference of user sentiment through digital vitals.
+* **Hana AI Personality**: A custom-engineered psychiatrist persona using RAG to build long-term rapport.
+* **Clinical Safety Protocols**: Integrated logic that suggests professional help when stress scores exceed critical thresholds (e.g., > 75).
+* **Resonance Dashboard**: A secure visual interface for users to monitor Cognitive Markers like "Synaptic Delay" and "Self-Calibration Nodes".
 
+---
+
+## 🛠️ The Professional Tech Stack
+
+### **Frontend**
+* **Core**: React (Vite) + TypeScript for type-safe UI.
+* **Design**: Tailwind CSS + Framer Motion for futuristic animations.
+* **Experience**: Lenis for smooth, cinematic scrolling.
+
+### **Backend**
+* **Server**: Node.js & Express with TypeScript.
+* **Orchestration**: LangChain for complex AI workflows and RAG.
+* **Inference**: Groq LPU for ultra-fast, "human-speed" AI responses.
+* **Storage**: MongoDB Atlas (Persistent) + Pinecone (Vector Memory).
+
+---
+
+## 📁 Project Structure
+
+```plaintext
 MindPulse/
 ├── client/                # React Frontend (Vite)
 │   ├── src/
@@ -50,42 +84,19 @@ MindPulse/
 │   │   ├── controllers/   # Chat & Dashboard Logic
 │   │   ├── models/        # MongoDB Schemas
 │   │   └── index.ts       # Server Entry Point
-└── .gitignore             # Ensuring node_modules & .env stay private
-⚙️ Installation & Setup
-Clone the repository:
 
-Bash
+---
 
-git clone https://github.com/kiran123-stack/MindPulse.git
-cd MindPulse
-Backend Setup:
+---
 
-Bash
+Author
+Kiran
+BCA Student @ IGNOU
 
-cd server
-npm install
-# Create a .env file with:
-# MONGO_URI, GROQ_API_KEY, HUGGINGFACEHUB_API_TOKEN, PINECONE_API_KEY
-npm run dev
-Frontend Setup:
+GitHub: https://github.com/kiran123-stack
 
-Bash
+Status: Software Engineering Portfolio Project (Currently in Development)
 
-cd ../client
-npm install
-# Create a .env file with:
-# VITE_API_BASE_URL=http://localhost:5000
-npm run dev
-🛡️ Security & Industry Standards
-CORS Configuration: Restricts API access to authorized domains only.
+Focus: AI Safety, Digital Phenotyping, and Zero-Knowledge Secure Architectures
 
-Environment Isolation: Uses .env files and Git exclusion to protect sensitive API tokens.
-
-Type Safety: 100% TypeScript implementation to prevent runtime errors.
-
-CI/CD Ready: Configured with specialized build scripts (render-build.sh) for seamless cloud deployment.
-
-👤 Author
-GitHub: @kiran123-stack
-
-Status: Currently in development (BCA Student @ IGNOU)
+Mission: Bridging the gap between real-time behavioral biometrics and compassionate AI-driven mental health support

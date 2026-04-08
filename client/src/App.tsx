@@ -7,11 +7,13 @@ import CalmWelcome from './CalmWelcome';
 import ReasonSelection from './ReasonSelection';
 import Assessment from './Assessment';
 import { decryptMessage } from './utils/crypto';
+import { Helmet } from 'react-helmet-async';
 
 interface SessionState {
   reason: string;
   userInfo: { name: string; age: string };
   assessmentScore: number;
+  assessmentAnswers: { question: string; answer: string }[]; 
 }
 
 const App = () => {
@@ -44,12 +46,13 @@ const App = () => {
   // =========================
 
   const navigate = useNavigate();
-  const [sessionData, setSessionData] = useState<SessionState>(() => {
+ const [sessionData, setSessionData] = useState<SessionState>(() => {
     const saved = localStorage.getItem('hana_session_data');
     return saved ? JSON.parse(saved) : {
       reason: '',
       userInfo: { name: '', age: '' },
-      assessmentScore: 0
+      assessmentScore: 0,
+      assessmentAnswers: [] // NEW
     };
   });
   useEffect(() => {
@@ -66,10 +69,9 @@ const App = () => {
     navigate('/assessment');
   };
   // After assessment complete → initialize AI
-  const handleAssessmentComplete = (score: number, info: { name: string, age: string }) => {
-    const finalData = { ...sessionData, assessmentScore: score, userInfo: info };
+  const handleAssessmentComplete = (score: number, info: { name: string, age: string }, answers: { question: string; answer: string }[]) => {
+    const finalData = { ...sessionData, assessmentScore: score, userInfo: info, assessmentAnswers: answers };
     setSessionData(finalData);
-
     initializeHana(finalData);
   };
 
@@ -324,10 +326,16 @@ const App = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/" element={
         <div className="bg-[#030712] min-h-screen text-white overflow-hidden font-sans selection:bg-cyan-500/30">
-
+         {/* Inject SEO Tags for the Landing Page */}
+          <Helmet>
+            <title>MindPulse | AI Mental Health Companion</title>
+            <meta name="description" content="MindPulse is your secure, end-to-end encrypted AI companion for navigating career confusion, work pressure, relationship issues, and overthinking." />
+            <meta property="og:title" content="MindPulse | AI Mental Health Companion" />
+            <meta property="og:type" content="website" />
+          </Helmet>
           <nav className="fixed top-0 left-0 w-full p-4 md:p-8 z-50 flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
-              <img src="/ICO.webp" alt='logo' className="w-8 h-8 rounded" />
+              <img src="/ICO.webp" alt='MindPulse Brand Logo' className="w-8 h-8 rounded" />
               <span className="text-lg font-bold tracking-widest uppercase text-slate-200">Mind<span className="text-cyan-400">Pulse</span></span>
             </div>
           </nav>

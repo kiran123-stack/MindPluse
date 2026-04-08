@@ -7,6 +7,7 @@ import User from './models/user.js';
 import { handleChatMessage,getDashboardData } from './controllers/chatController.js';
 
 import rateLimit from 'express-rate-limit';
+import { encryptMessage } from './utils/crypto.js';
 
 
 
@@ -57,18 +58,28 @@ app.get('/api/dashboard/:secretKey', getDashboardData);
 
 app.post('/api/auth/init', async (req: Request, res: Response) => {
     try {
-        // ✅ Destructure the exact payload structure sent by the frontend
-        const { reason, userInfo, assessmentScore } = req.body; 
+        //  Destructure the exact payload structure sent by the frontend
+       const { reason, userInfo, assessmentScore, assessmentAnswers } = req.body;
         const secretKey = generateSecretKey();
-        
+        const encryptedAnswers = (assessmentAnswers || []).map((ans: any) => 
+             encryptMessage(`Q: ${ans.question} A: ${ans.answer}`, secretKey)
+        );
+
+        const userName = userInfo?.name || "my friend";
+        const initialHanaMessage = `Hello ${userName}. I am Dr. Hana. I have reviewed your vitals, and I am here for you. How are you feeling right now?`;
         const newUser = await User.create({
             secretKey: secretKey,
             name: userInfo?.name || "UNKNOWN",
             age: userInfo?.age || "",
             reason: reason || "general",
             initialAssessmentScore: assessmentScore || 0,
-            stressScore: assessmentScore || 0, // ✅ Seed initial stress with assessment score
-            history: []
+            stressScore: assessmentScore || 0, // Seed initial stress with assessment score
+            history: [{
+                role: 'model',
+                content: encryptMessage(initialHanaMessage, secretKey),
+                metrics: { latency: 0, backspaces: 0, idleTime: 0 },
+                timestamp: new Date()
+            }]
         });
 
         res.status(201).json({ 

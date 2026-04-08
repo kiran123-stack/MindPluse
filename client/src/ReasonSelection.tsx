@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { 
   Briefcase, 
   Zap, 
@@ -71,6 +72,12 @@ const ReasonSelection : React.FC<ReasonSelectionProps> = ({ onSelect }) => {
 
   return (
     <div className="min-h-screen bg-[#030712] flex flex-col items-center justify-center p-6 text-white font-sans">
+    {/* Inject SEO Tags for Reason Selection */}
+      <Helmet>
+        <title>Select Focus Area | MindPulse</title>
+        <meta name="description" content="Choose your current focus area—whether it's career confusion, relationship issues, or low motivation—so Dr. Hana can personalize your session." />
+      </Helmet>
+      
       <div className="max-w-2xl w-full text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">What's on your mind?</h2>
         <p className="text-slate-400">Selecting a focus area helps Hana understand you better.</p>

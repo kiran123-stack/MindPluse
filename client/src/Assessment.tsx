@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { questionBank } from "./questionBank";
+import { Helmet } from 'react-helmet-async';
 
 // =========================
 // 🔹 TYPES
@@ -24,10 +25,14 @@ interface Question {
   options: Option[];
 }
 
-// ✅ Proper props definition
+//  Proper props definition
 interface AssessmentProps {
   selectedReason: ReasonType;
-  onComplete: (score: number, info: { name: string; age: string }) => void;
+  onComplete: (
+    score: number, 
+    info: { name: string; age: string }, 
+    answers: { question: string; answer: string }[]
+  ) => void;
 }
 
 // =========================
@@ -46,22 +51,26 @@ const Assessment = ({
   const [step, setStep] = useState(0);
   const [userInfo, setUserInfo] = useState({ name: "", age: "" });
   const [totalScore, setTotalScore] = useState(0);
+  const [answers, setAnswers] = useState<{question: string, answer: string}[]>([]);
 
-  // ✅ Get questions based on reason
+  //  Get questions based on reason
   const currentQuestions: Question[] = questionBank[selectedReason];
 
   // =========================
   // 🔹 HANDLER
   // =========================
- const handleNext = (score: number) => {
+ const handleNext = (score: number, questionText: string, answerLabel: string) => {
     const updatedScore = totalScore + score;
+    const newAnswers = [...answers, { question: questionText, answer: answerLabel }];
+    
     setTotalScore(updatedScore);
+    setAnswers(newAnswers);
 
     if (step < currentQuestions.length) {
       setStep((prev) => prev + 1);
     } else {
-      // ✅ Call the onComplete prop instead of navigate
-      onComplete(updatedScore, userInfo);
+      // Pass the collected answers up to App.tsx
+      onComplete(updatedScore, userInfo, newAnswers);
     }
   };
   // =========================
@@ -70,6 +79,11 @@ const Assessment = ({
   if (step === 0) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6 text-white">
+       {/* Inject SEO Tags for Assessment */}
+        <Helmet>
+          <title>Personal Vitals Assessment | MindPulse</title>
+          <meta name="description" content="Complete your personal mental wellness assessment to help calibrate your upcoming encrypted session with Dr. Hana." />
+        </Helmet>
         <div className="max-w-md w-full bg-slate-900/40 border border-white/10 p-10 rounded-[2.5rem] backdrop-blur-xl">
           <h2 className="text-2xl font-bold mb-6 text-cyan-400">
             Personal Vitals
@@ -143,7 +157,7 @@ const Assessment = ({
           {currentQ.options.map((opt, i) => (
             <button
               key={i}
-              onClick={() => handleNext(opt.score)}
+              onClick={() => handleNext(opt.score, currentQ.text, opt.label)}
               className="text-left p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group"
             >
               <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">

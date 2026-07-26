@@ -1,6 +1,6 @@
-# 🧠 MindPulse: The Future of Digital Phenotyping
+# 🧠 MindPluse: The Future of Digital Phenotyping
 
-> **MindPulse** is an enterprise-grade, full-stack AI system designed to quantify mental state and cognitive load through **non-invasive digital interaction biometrics**. By analyzing "micro-behaviors"—typing latency, self-correction frequency, and cognitive pauses—MindPulse bridges the gap between traditional chatbots and clinical monitoring.
+> **MindPluse** is an enterprise-grade, full-stack AI system designed to quantify mental state and cognitive load through **non-invasive digital interaction biometrics**. By analyzing "micro-behaviors"—typing latency, self-correction frequency, and cognitive pauses—MindPulse bridges the gap between traditional chatbots and clinical monitoring.
 
 ---
 

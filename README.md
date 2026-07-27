@@ -59,7 +59,7 @@ We prioritize user privacy by ensuring that even the developers cannot read your
 
 ### **Frontend**
 * **Core**: React (Vite) + TypeScript for type-safe UI.
-* **Design**: Tailwind CSS + Framer Motion for futuristic animations.
+* **Design**: Tailwind CSS + GSAP for futuristic animations.
 * **Experience**: Lenis for smooth, cinematic scrolling.
 
 ### **Backend**

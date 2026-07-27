@@ -27,11 +27,9 @@ const Dashboard = () => {
         console.error("Dashboard sync failed");
       }
     };
-
+      // This fetches the latest user metrics immediately on entering the dashboard
     fetchData();
-    const interval = setInterval(fetchData, 2000);
-
-    return () => clearInterval(interval);
+    
   }, []);
 
   return (

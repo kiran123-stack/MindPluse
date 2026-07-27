@@ -67,23 +67,48 @@ export const handleChatMessage = async (req: Request, res: Response) => {
 
         const interactionCount = Math.floor(user.history.length / 2);
 
-        // 1. Calculate Session Duration
-const firstMessage = user.history[0];
-const sessionStart = firstMessage ? new Date(firstMessage.timestamp).getTime() : Date.now();
-const currentTime = Date.now();
-const sessionDurationMinutes = (currentTime - sessionStart) / (1000 * 60);
-
-// 2. The Dynamic Hard Stop (15 Minutes)
+                // 1. Calculate Session Duration dynamically based on the current active session (12h gap)
+        let sessionStart = Date.now();
+        if (user.history.length > 0) {
+            sessionStart = new Date(user.history[user.history.length - 1].timestamp).getTime();
+            for (let i = user.history.length - 1; i > 0; i--) {
+                const currentMsgTime = new Date(user.history[i].timestamp).getTime();
+                const prevMsgTime = new Date(user.history[i - 1].timestamp).getTime();
+                if (currentMsgTime - prevMsgTime > 12 * 60 * 60 * 1000) {
+                    sessionStart = currentMsgTime;
+                    break;
+                }
+                sessionStart = prevMsgTime;
+            }
+        }
+        const currentTime = Date.now();
+        const sessionDurationMinutes = (currentTime - sessionStart) / (1000 * 60);
+        
+        // 2. The Dynamic Hard Stop (15 Minutes)
+        // 2. 15-Minute Daily Block (Lock for exactly 24 hours after the last message)
 if (sessionDurationMinutes >= 15) {
-    // We use user.name here so it works for everyone, not just Kiran
-    const displayName = user.name && user.name !== "UNKNOWN" ? user.name : "my friend";
-    
-    return res.json({ 
-        aiText: `${displayName}, we have explored a lot in these 15 minutes. To honor your progress, your mind needs rest. I won't be replying further today. Please try this: Close your eyes and breathe for 2 minutes. Come back tomorrow, and we will continue. Take care.`,
-        isLocked: true 
-    });
-}
+    // Time of the user's last message in history
+    const lastSessionMessageTime =
+        user.history.length > 0
+            ? new Date(user.history[user.history.length - 1].timestamp).getTime()
+            : currentTime;
 
+    const timeSinceLastMessageHours =
+        (currentTime - lastSessionMessageTime) / (1000 * 60 * 60);
+
+    // Keep locked only for 24 hours after the last message
+    if (timeSinceLastMessageHours < 24) {
+        const displayName =
+            user.name && user.name !== "UNKNOWN"
+                ? user.name
+                : "my friend";
+
+        return res.json({
+            aiText: `${displayName}, we have explored a lot in these 15 minutes. To honor your progress, your mind needs rest. I won't be replying further today. Please try this: Close your eyes and breathe for 2 minutes. Come back tomorrow, and we will continue. Take care.`,
+            isLocked: true
+        });
+    }
+}
         //  Smart Name Extraction (Preserved)
         if (!user.name && interactionCount <= 2) {
             const cleanedName = message.replace(/^(my name is|i am|i'm|call me|this is|name is)\s+/i, "").trim();

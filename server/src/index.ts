@@ -74,6 +74,7 @@ app.post('/api/auth/init', async (req: Request, res: Response) => {
             reason: reason || "general",
             initialAssessmentScore: assessmentScore || 0,
             stressScore: assessmentScore || 0, // Seed initial stress with assessment score
+            assessmentAnswers: encryptedAnswers, // <-- SAVES THE ANSWERS
             history: [{
                 role: 'model',
                 content: encryptMessage(initialHanaMessage, secretKey),
@@ -109,12 +110,27 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         }
         const lastMessage = user.history[user.history.length - 1];
         if (lastMessage) {
-            const hoursSinceLast = (Date.now() - new Date(lastMessage.timestamp).getTime()) / (1000 * 60 * 60);
-            if (hoursSinceLast < 24) {
-                return res.status(403).json({ 
-                    success: false, 
-                    message: "Hana is resting. Please come back after 24 hours." 
-                });
+            let sessionStart = new Date(lastMessage.timestamp).getTime();
+            for (let i = user.history.length - 1; i > 0; i--) {
+                const currentMsgTime = new Date(user.history[i].timestamp).getTime();
+                const prevMsgTime = new Date(user.history[i - 1].timestamp).getTime();
+                if (currentMsgTime - prevMsgTime > 12 * 60 * 60 * 1000) {
+                    sessionStart = currentMsgTime;
+                    break;
+                }
+                sessionStart = prevMsgTime;
+            }
+            const sessionDurationMinutes = (new Date(lastMessage.timestamp).getTime() - sessionStart) / (1000 * 60);
+
+            // Only lock them out if their last session actually exceeded the 15-minute limit
+            if (sessionDurationMinutes >= 15) {
+                const hoursSinceLast = (Date.now() - new Date(lastMessage.timestamp).getTime()) / (1000 * 60 * 60);
+                if (hoursSinceLast < 24) {
+                    return res.status(403).json({ 
+                        success: false, 
+                        message: "Hana is resting. Please come back after 24 hours." 
+                    });
+                }
             }
         }
 

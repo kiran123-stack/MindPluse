@@ -36,7 +36,7 @@ Research in **Digital Phenotyping** suggests that our digital interactions are a
 * **Reference Study**: *The Effects of Typing Demand on Emotional Stress, Mouse and Keystroke Behaviours* (Lim et al., 2015).
 ---
 
-## 🛡️ "Zero-Knowledge" Security Architecture
+## 🛡️ "Server-Side Encryption at Rest" Security Architecture
 
 We prioritize user privacy by ensuring that even the developers cannot read your private reflections.
 

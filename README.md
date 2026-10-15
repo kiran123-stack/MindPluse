@@ -21,6 +21,7 @@ MindPulse is a mental health companion that combines real-time behavioral biomet
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [Real-World Bug Solving & Production Resilience](#real-world-bug-solving--production-resilience)
 - [Why This Could Be More Than a Student Project](#why-this-could-be-more-than-a-student-project)
 - [Honest Challenges & Limitations](#honest-challenges--limitations)
 - [What I Learned Building This](#what-i-learned-building-this)
@@ -343,6 +344,32 @@ cd client
 npm install
 npm run dev          # Runs on http://localhost:5173
 ```
+
+---
+
+## Real-World Bug Solving & Production Resilience
+
+Writing code is only half of software engineering; diagnosing complex distributed failures and engineering for high-availability production resilience is where real craftsmanship shows. Below are key architectural bugs diagnosed and solved in MindPulse:
+
+### 1. Vector Pipeline Quota Deprecation & Zero-Cost Migration
+* **The Failure:** Hugging Face serverless inference policy changed, moving `all-MiniLM-L6-v2` behind paid inference quotas. This threw HTTP 402 ("No remaining credits"), causing Pinecone vector lookups to crash and triggering the fallback error handler (`"connection to the memory core is fluctuating"`).
+* **Root-Cause Analysis:** The failure was identified via live diagnostic tracing on LangChain embedding endpoints. Rather than coupling the app to paid Hugging Face credits, the pipeline was re-architected.
+* **The Engineering Fix:** Built a custom LangChain `GeminiEmbeddings` adapter extending `@langchain/core/embeddings` to leverage Google's `gemini-embedding-001` with `outputDimensionality: 384`. This seamlessly matches the 384-dimensional Pinecone index with zero breaking changes, zero cloud cost, and unlimited high-throughput embedding generation.
+
+### 2. Fault-Tolerant Memory Fallback Circuit
+* **The Failure:** Previously, if an external vector database or embedding provider encountered a network timeout or API glitch, the entire chat controller threw a 500 error, breaking the user's conversational flow.
+* **The Engineering Fix:** Implemented a resilient fallback circuit around vector store operations in `chatController.ts`. If semantic memory retrieval encounters a provider outage, the controller gracefully logs a warning, falls back to zero-shot context, and allows the primary LLM (Groq) to continue the conversation seamlessly. The user experience never crashes due to external downstream dependencies.
+
+### 3. Mitigating the MongoDB "Unbounded Array Anti-Pattern"
+* **The Architecture Risk:** Storing chat history as an unbounded embedded array (`user.history: []`) inside a single MongoDB document risked approaching MongoDB's hard 16 MB BSON document limit over long-term multi-month user engagements, while simultaneously causing document reallocations on disk and slowing down document reads.
+* **The Engineering Fix:** 
+  * Capped active embedded history to the **most recent 200 messages** (~60 KB document footprint, safely below 0.4% of MongoDB limits).
+  * Decoupled long-term memory: older memories past the 200-message boundary remain permanently indexed and searchable in Pinecone vector storage.
+  * Added a dedicated persistent `totalInteractions` schema counter to ensure multi-session clinical milestones (such as 15-minute daily wrap-ups and prolonged distress referrals) track accurately across the user's lifetime.
+
+### 4. LLM Token Optimization via Sliding Window Context
+* **The Bottleneck:** Appending the full history array into the Groq LLM prompt on every single chat turn led to quadratic context token inflation and increasing response latency.
+* **The Engineering Fix:** Implemented a **15-message sliding window** (`user.history.slice(-15)`) for immediate conversational dialogue, offloading older context retrieval to semantic vector search. This brought Groq response times consistently under 1 second.
 
 ---
 

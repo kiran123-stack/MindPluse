@@ -25,6 +25,7 @@ export interface IUser extends Document {
     assessmentAnswers: string[];   
     profession?: string;
     stressScore: number;
+    totalInteractions?: number;
     history: IMessage[];
 }
 
@@ -39,6 +40,7 @@ const UserSchema: Schema = new Schema({
     age: { type: String, default: "" },
     reason: { type: String, default: "" },   
     profession: { type: String, default: "" },
+    totalInteractions: { type: Number, default: 0 },
     
     // stressScore will be updated by Gemini based on the metrics
     stressScore: { type: Number, default: 0 },

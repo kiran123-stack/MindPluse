@@ -65,7 +65,7 @@ export const handleChatMessage = async (req: Request, res: Response) => {
             .map(encStr => decryptMessage(encStr, secretKey))
             .join("\n");
 
-        const interactionCount = Math.floor(user.history.length / 2);
+        const interactionCount = user.totalInteractions ?? Math.floor(user.history.length / 2);
 
                 // 1. Calculate Session Duration dynamically based on the current active session (12h gap)
         let sessionStart = Date.now();
@@ -125,16 +125,22 @@ if (sessionDurationMinutes >= 15) {
         }
 
 
-        //  RETRIEVE LONG-TERM MEMORY
-        const vectorStore = await getVectorStore();
-        const relevantDocs = await vectorStore.similaritySearch(message, 3);
+        // 💾 RETRIEVE LONG-TERM MEMORY
+        let longTermContext = "No prior relevant memories.";
+        let vectorStore: any = null;
+        try {
+            vectorStore = await getVectorStore();
+            const relevantDocs = await vectorStore.similaritySearch(message, 3);
 
-        const longTermContext = relevantDocs.length > 0
-            ? relevantDocs.map(doc => {
-                // Decrypt the memory so Dr. Hana can actually understand it
-                return decryptMessage(doc.pageContent, secretKey);
-            }).join("\n---\n")
-            : "No prior relevant memories.";
+            if (relevantDocs.length > 0) {
+                longTermContext = relevantDocs.map((doc: any) => {
+                    // Decrypt the memory so Dr. Hana can actually understand it
+                    return decryptMessage(doc.pageContent, secretKey);
+                }).join("\n---\n");
+            }
+        } catch (memErr: any) {
+            console.warn("⚠️ Memory retrieval warning:", memErr?.message || memErr);
+        }
         const message_word_count = message.trim().split(/\s+/).length;
 
 
@@ -766,7 +772,9 @@ Historical stress information may be supplied internally, but NEVER reveal a num
             new StringOutputParser()
         ]);
 
-        const historyForAI = user.history.map(msg => {
+        // 🚀 SLIDING WINDOW: Keep last 15 messages for fast, responsive LLM context
+        const recentHistory = user.history.slice(-15);
+        const historyForAI = recentHistory.map(msg => {
             const decryptedContent = decryptMessage(msg.content, secretKey);
             return msg.role === 'user' ? ["human", decryptedContent] : ["ai", decryptedContent];
         });
@@ -806,12 +814,19 @@ const currentMsgStress = Math.min(100, behavioralStress + languageStress);
             secretKey
         );
 
-        await vectorStore.addDocuments([
-            new Document({
-                pageContent: memoryToStore, // <--- Encrypted
-                metadata: { secretKey: secretKey }
-            })
-        ]);
+        try {
+            if (!vectorStore) {
+                vectorStore = await getVectorStore();
+            }
+            await vectorStore.addDocuments([
+                new Document({
+                    pageContent: memoryToStore, // <--- Encrypted
+                    metadata: { secretKey: secretKey }
+                })
+            ]);
+        } catch (saveErr: any) {
+            console.warn("⚠️ Memory save warning:", saveErr?.message || saveErr);
+        }
 
         //  SAVE TO MONGO (Preserved - For UI History)
         user.history.push({
@@ -839,6 +854,13 @@ const currentMsgStress = Math.min(100, behavioralStress + languageStress);
         }
 
         user.stressScore = Math.round(newStress);
+        user.totalInteractions = interactionCount + 1;
+
+        // Cap embedded history array to the most recent 200 messages to prevent unbounded document growth
+        if (user.history.length > 200) {
+            user.history = user.history.slice(-200);
+        }
+
         await user.save();
         res.json({ aiText, stressScore: user.stressScore });
 
